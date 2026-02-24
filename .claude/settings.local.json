@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb devices:*)",
+      "Bash(taskkill:*)",
+      "Bash(adb reverse:*)",
+      "Bash(adb shell am start:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)"
+    ]
+  }
+}
