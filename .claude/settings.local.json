@@ -6,7 +6,10 @@
       "Bash(adb reverse:*)",
       "Bash(adb shell am start:*)",
       "Bash(curl:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "WebSearch",
+      "WebFetch(domain:developers-apps-in-toss.toss.im)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

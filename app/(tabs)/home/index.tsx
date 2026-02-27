@@ -58,13 +58,13 @@ export default function HomeScreen() {
   };
 
   const handleSportPress = (sport: Sport) => {
-    router.push(`/home/${sport.id}`);
+    router.push(`/(tabs)/home/${sport.id}`);
   };
 
   const renderRoomItem = ({ item }: { item: RoomWithDetails }) => (
     <TouchableOpacity
       style={styles.roomCard}
-      onPress={() => router.push(`/home/${item.sport_id}/${item.id}`)}
+      onPress={() => router.push(`/(tabs)/home/${item.sport_id}/${item.id}`)}
       activeOpacity={0.7}
     >
       <View style={styles.roomHeader}>
@@ -142,7 +142,7 @@ export default function HomeScreen() {
               <Text style={styles.sectionTitle}>종목 선택</Text>
             </View>
             <View style={styles.sportGrid}>
-              {sports.map((item) => (
+              {(sports || []).map((item) => (
                 <TouchableOpacity
                   key={item.id}
                   style={styles.sportItem}

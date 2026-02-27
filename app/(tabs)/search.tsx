@@ -129,8 +129,6 @@ export default function SearchScreen() {
       month: 'short',
       day: 'numeric',
       weekday: 'short',
-    });
-    const formattedTime = playDate.toLocaleTimeString('ko-KR', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -138,7 +136,7 @@ export default function SearchScreen() {
     return (
       <TouchableOpacity
         style={styles.roomCard}
-        onPress={() => router.push(`/home/${item.sport_id}/${item.id}`)}
+        onPress={() => router.push(`/(tabs)/home/${item.sport_id}/${item.id}`)}
         activeOpacity={0.7}
       >
         <View style={styles.roomHeader}>
@@ -165,7 +163,7 @@ export default function SearchScreen() {
           <View style={styles.roomInfoRow}>
             <Feather name="clock" size={14} color={COLORS.textSecondary} />
             <Text style={styles.roomInfoText}>
-              {formattedDate} {formattedTime}
+              {formattedDate}
             </Text>
           </View>
           <View style={styles.roomInfoRow}>
@@ -311,11 +309,11 @@ export default function SearchScreen() {
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Feather
-              name={isSearching ? 'loader' : 'search'}
-              size={48}
-              color={COLORS.textTertiary}
-            />
+            {isSearching ? (
+              <ActivityIndicator size="large" color={COLORS.textTertiary} />
+            ) : (
+              <Feather name="search" size={48} color={COLORS.textTertiary} />
+            )}
             <Text style={styles.emptyTitle}>
               {isSearching ? '검색 중...' : '검색 결과가 없습니다'}
             </Text>

@@ -37,6 +37,10 @@ export function useProfile() {
       return { url: null, error: null, cancelled: true, localUri: null };
     }
 
+    if (!result.assets || result.assets.length === 0) {
+      return { url: null, error: '이미지를 선택하지 않았습니다.', cancelled: false, localUri: null };
+    }
+
     const asset = result.assets[0];
     if (!asset.base64) {
       return { url: null, error: '이미지 데이터를 가져올 수 없습니다.', cancelled: false, localUri: null };

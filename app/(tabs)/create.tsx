@@ -327,7 +327,7 @@ export default function CreateRoomScreen() {
 
     return (
       <View style={styles.chipContainer}>
-        {sports.map((sport) => {
+        {(sports || []).map((sport) => {
           const selected = sportId === sport.id;
           return (
             <TouchableOpacity

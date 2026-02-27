@@ -33,9 +33,10 @@ export default function WheelPicker({
 
   useEffect(() => {
     const index = value - min;
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       scrollRef.current?.scrollTo({ y: index * ITEM_HEIGHT, animated: false });
     }, 50);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {

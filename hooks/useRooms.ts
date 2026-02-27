@@ -98,16 +98,20 @@ export function useRooms() {
       .eq('id', roomId)
       .single();
 
-    if (room?.host_id === userId) {
-      return { data: null, error: { message: '방장은 이미 참가 중입니다.' } };
+    if (!room) {
+      return { data: null, error: new Error('방을 찾을 수 없습니다.') };
     }
 
-    if (room?.status !== 'recruiting') {
-      return { data: null, error: { message: '모집이 마감된 방입니다.' } };
+    if (room.host_id === userId) {
+      return { data: null, error: new Error('방장은 이미 참가 중입니다.') };
     }
 
-    if (room && room.current_participants >= room.max_participants) {
-      return { data: null, error: { message: '정원이 가득 찼습니다.' } };
+    if (room.status !== 'recruiting') {
+      return { data: null, error: new Error('모집이 마감된 방입니다.') };
+    }
+
+    if (room.current_participants >= room.max_participants) {
+      return { data: null, error: new Error('정원이 가득 찼습니다.') };
     }
 
     const { data, error } = await supabase
@@ -145,24 +149,19 @@ export function useRooms() {
       .eq('host_id', userId)
       .order('play_date', { ascending: true });
 
-    // 내가 참가한 방
-    const { data: participatingRoomIds } = await supabase
+    // 내가 참가한 방 (room_participants → rooms 조인으로 단일 쿼리)
+    const { data: participatingData } = await supabase
       .from('room_participants')
-      .select('room_id')
+      .select('rooms(*, sports(*), users!host_id(*))')
       .eq('user_id', userId)
       .eq('status', 'approved');
 
-    let participatingRooms: RoomWithDetails[] = [];
-    if (participatingRoomIds && participatingRoomIds.length > 0) {
-      const roomIds = participatingRoomIds.map((r) => r.room_id);
-      const { data } = await supabase
-        .from('rooms')
-        .select('*, sports(*), users!host_id(*)')
-        .in('id', roomIds)
-        .order('play_date', { ascending: true });
-
-      participatingRooms = (data as RoomWithDetails[]) || [];
-    }
+    const participatingRooms: RoomWithDetails[] = (participatingData || [])
+      .map((r: any) => r.rooms)
+      .filter(Boolean)
+      .sort((a: RoomWithDetails, b: RoomWithDetails) =>
+        a.play_date.localeCompare(b.play_date)
+      );
 
     setIsLoading(false);
     return {

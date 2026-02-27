@@ -45,8 +45,8 @@ export default function RoomDetailScreen() {
     loadRoom();
   }, [loadRoom]);
 
-  // Real-time updates for participant changes
-  useRoomRealtime(roomId || '', loadRoom);
+  // Real-time updates for participant changes (skip if roomId is empty)
+  useRoomRealtime(roomId || '', roomId ? loadRoom : () => {});
 
   const isHost = user?.id === room?.host_id;
   const isParticipant = room?.room_participants.some(

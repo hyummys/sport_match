@@ -75,7 +75,7 @@ export default function MyMatchesScreen() {
   };
 
   const handleRoomPress = (room: RoomWithDetails) => {
-    router.push(`/home/${room.sport_id}/${room.id}`);
+    router.push(`/(tabs)/home/${room.sport_id}/${room.id}`);
   };
 
   const currentData = activeTab === 'hosted' ? hostedRooms : participatingRooms;

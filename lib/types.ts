@@ -2,6 +2,11 @@
 // Enum 타입
 // ============================================
 export type SkillLevel = number; // 0~10
+
+export function isValidSkillLevel(level: number): boolean {
+  return Number.isInteger(level) && level >= 0 && level <= 10;
+}
+
 export type RoomStatus = 'recruiting' | 'closed' | 'completed' | 'cancelled';
 export type ParticipantStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 export type NotificationType =

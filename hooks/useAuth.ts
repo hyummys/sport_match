@@ -8,30 +8,41 @@ export function useAuth() {
     useAuthStore();
 
   useEffect(() => {
-    // onAuthStateChange fires INITIAL_SESSION on subscribe, so getSession is not needed.
-    // Using only onAuthStateChange avoids the race condition of double-fetching user profile.
+    let currentRequestId = 0;
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
-        fetchUser(session.user.id);
+        const requestId = ++currentRequestId;
+        fetchUser(session.user.id, requestId, () => requestId === currentRequestId);
       } else {
+        currentRequestId++;
         setUser(null);
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      currentRequestId++;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const fetchUser = async (userId: string) => {
+  const fetchUser = async (
+    userId: string,
+    _requestId: number,
+    isCurrent: () => boolean
+  ) => {
     try {
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
+
+      if (!isCurrent()) return;
 
       if (error) {
         console.warn('Failed to fetch user profile:', error.message);
@@ -40,10 +51,13 @@ export function useAuth() {
         setUser(data as User);
       }
     } catch (e) {
+      if (!isCurrent()) return;
       console.warn('Unexpected error fetching user profile:', e);
       setUser(null);
     } finally {
-      setLoading(false);
+      if (isCurrent()) {
+        setLoading(false);
+      }
     }
   };
 

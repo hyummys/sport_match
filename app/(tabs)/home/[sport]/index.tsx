@@ -68,7 +68,7 @@ export default function SportRoomsScreen() {
           <Feather name="clock" size={14} color={COLORS.textSecondary} />
           <Text style={styles.detailText}>
             {new Date(item.play_date).toLocaleDateString('ko-KR', {
-              month: 'long',
+              month: 'short',
               day: 'numeric',
               weekday: 'short',
               hour: '2-digit',

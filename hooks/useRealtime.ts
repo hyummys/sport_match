@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-type TableName = 'rooms' | 'room_participants' | 'notifications';
+type TableName = 'rooms' | 'room_participants' | 'notifications' | 'favorite_places';
 type ChangeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
 interface UseRealtimeOptions {
@@ -17,6 +17,8 @@ export function useRealtime({ table, event = '*', filter, onData }: UseRealtimeO
   onDataRef.current = onData;
 
   useEffect(() => {
+    let active = true;
+
     const channelConfig: any = {
       event,
       schema: 'public',
@@ -30,11 +32,14 @@ export function useRealtime({ table, event = '*', filter, onData }: UseRealtimeO
     const channel = supabase
       .channel(`realtime-${table}-${filter || 'all'}`)
       .on('postgres_changes', channelConfig, (payload) => {
-        onDataRef.current(payload);
+        if (active) {
+          onDataRef.current(payload);
+        }
       })
       .subscribe();
 
     return () => {
+      active = false;
       supabase.removeChannel(channel);
     };
   }, [table, event, filter]);
