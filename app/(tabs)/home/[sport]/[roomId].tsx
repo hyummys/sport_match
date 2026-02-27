@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { COLORS, formatSkillRange, ROOM_STATUS_LABELS, ROOM_STATUS_COLORS } from '../../../../lib/constants';
+import { formatRoomCardHeader } from '../../../../lib/format';
 import { RoomDetailWithParticipants, RoomStatus } from '../../../../lib/types';
 import { useRooms } from '../../../../hooks/useRooms';
 import { useRoomRealtime } from '../../../../hooks/useRealtime';
@@ -185,7 +186,7 @@ export default function RoomDetailScreen() {
       >
         {/* Title + Status */}
         <View style={styles.titleSection}>
-          <Text style={styles.title}>{room.title}</Text>
+          <Text style={styles.title}>{formatRoomCardHeader(room)}</Text>
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
             <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
           </View>

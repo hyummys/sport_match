@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { COLORS, ROOM_STATUS_LABELS, ROOM_STATUS_COLORS } from '../../lib/constants';
+import { formatRoomCardHeader } from '../../lib/format';
 import { useRooms } from '../../hooks/useRooms';
 import { useAuthStore } from '../../stores/authStore';
 import { RoomWithDetails, RoomStatus } from '../../lib/types';
@@ -111,33 +112,16 @@ export default function MyMatchesScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.roomHeader}>
-          <View style={styles.roomHeaderLeft}>
-            <Text style={styles.roomSportIcon}>{item.sports?.icon}</Text>
-            <Text style={styles.roomSportName}>{item.sports?.name}</Text>
-          </View>
+          <Text style={styles.roomTitle} numberOfLines={1}>
+            {formatRoomCardHeader(item)}
+          </Text>
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '1A' }]}>
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
             <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
           </View>
         </View>
 
-        <Text style={styles.roomTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-
         <View style={styles.roomInfo}>
-          <View style={styles.roomInfoRow}>
-            <Feather name="clock" size={14} color={COLORS.textSecondary} />
-            <Text style={styles.roomInfoText}>
-              {new Date(item.play_date).toLocaleDateString('ko-KR', {
-                month: 'short',
-                day: 'numeric',
-                weekday: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
-          </View>
           <View style={styles.roomInfoRow}>
             <Feather name="map-pin" size={14} color={COLORS.textSecondary} />
             <Text style={styles.roomInfoText} numberOfLines={1}>
@@ -338,20 +322,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  roomHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  roomSportIcon: {
-    fontSize: 18,
-  },
-  roomSportName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    marginBottom: 10,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -374,7 +345,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.text,
-    marginBottom: 10,
+    flex: 1,
+    marginRight: 8,
   },
   roomInfo: {
     gap: 6,

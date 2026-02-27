@@ -25,6 +25,7 @@ import {
   formatSkillRange,
   getLevelDescriptions,
 } from '../../lib/constants';
+import { generateRoomTitle } from '../../lib/format';
 import { useRooms } from '../../hooks/useRooms';
 import { useFavoritePlaces } from '../../hooks/useFavoritePlaces';
 import { useAuthStore } from '../../stores/authStore';
@@ -67,7 +68,6 @@ export default function CreateRoomScreen() {
 
   // Form state
   const [sportId, setSportId] = useState('');
-  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [locationName, setLocationName] = useState('');
   const [locationAddress, setLocationAddress] = useState('');
@@ -149,7 +149,6 @@ export default function CreateRoomScreen() {
   };
 
   const resetForm = () => {
-    setTitle('');
     setDescription('');
     setLocationName('');
     setLocationAddress('');
@@ -166,10 +165,6 @@ export default function CreateRoomScreen() {
   const validate = (): boolean => {
     if (!sportId) {
       Alert.alert('입력 오류', '종목을 선택해주세요.');
-      return false;
-    }
-    if (!title.trim()) {
-      Alert.alert('입력 오류', '제목을 입력해주세요.');
       return false;
     }
     if (!selectedDate) {
@@ -210,7 +205,7 @@ export default function CreateRoomScreen() {
 
     const input: CreateRoomInput = {
       sport_id: sportId,
-      title: title.trim(),
+      title: generateRoomTitle(selectedSport?.name ?? '', locationName.trim(), getPlayDateISO()!),
       description: description.trim() || undefined,
       location_name: locationName.trim(),
       location_address: locationAddress.trim() || undefined,
@@ -745,19 +740,6 @@ export default function CreateRoomScreen() {
           <View style={styles.section}>
             <Text style={styles.label}>종목 선택 *</Text>
             {renderSportChips()}
-          </View>
-
-          {/* Title */}
-          <View style={styles.section}>
-            <Text style={styles.label}>제목 *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="예: 주말 풋살 같이 하실 분!"
-              placeholderTextColor={COLORS.textTertiary}
-              value={title}
-              onChangeText={setTitle}
-              maxLength={50}
-            />
           </View>
 
           {/* Description */}

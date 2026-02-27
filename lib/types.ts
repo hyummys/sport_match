@@ -119,7 +119,7 @@ export interface RoomDetailWithParticipants extends RoomWithDetails {
 // ============================================
 export interface CreateRoomInput {
   sport_id: string;
-  title: string;
+  title?: string;
   description?: string;
   location_name: string;
   location_address?: string;

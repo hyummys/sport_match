@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { supabase } from '../../../../lib/supabase';
 import { Sport, RoomWithDetails } from '../../../../lib/types';
 import { COLORS, formatSkillRange } from '../../../../lib/constants';
+import { formatRoomCardHeader } from '../../../../lib/format';
 import { useRooms } from '../../../../hooks/useRooms';
 
 export default function SportRoomsScreen() {
@@ -52,7 +53,7 @@ export default function SportRoomsScreen() {
     >
       <View style={styles.roomCardHeader}>
         <Text style={styles.roomTitle} numberOfLines={1}>
-          {item.title}
+          {formatRoomCardHeader(item)}
         </Text>
         <View style={styles.statusBadge}>
           <Text style={styles.statusText}>모집중</Text>
@@ -63,18 +64,6 @@ export default function SportRoomsScreen() {
         <View style={styles.detailRow}>
           <Feather name="map-pin" size={14} color={COLORS.textSecondary} />
           <Text style={styles.detailText}>{item.location_name}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Feather name="clock" size={14} color={COLORS.textSecondary} />
-          <Text style={styles.detailText}>
-            {new Date(item.play_date).toLocaleDateString('ko-KR', {
-              month: 'short',
-              day: 'numeric',
-              weekday: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
         </View>
         <View style={styles.detailRow}>
           <Feather name="users" size={14} color={COLORS.textSecondary} />

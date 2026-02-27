@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../lib/supabase';
 import { Sport, RoomWithDetails } from '../../lib/types';
 import { COLORS, formatSkillRange } from '../../lib/constants';
+import { formatRoomCardHeader } from '../../lib/format';
 import { useFilterStore } from '../../stores/filterStore';
 import { useUserSports } from '../../hooks/useUserSports';
 import { useAuthStore } from '../../stores/authStore';
@@ -105,7 +106,8 @@ export default function SearchScreen() {
     }
 
     if (searchText.trim()) {
-      query = query.ilike('title', `%${searchText.trim()}%`);
+      const q = searchText.trim();
+      query = query.or(`description.ilike.%${q}%,location_name.ilike.%${q}%`);
     }
 
     const { data } = await query;
@@ -156,15 +158,6 @@ export default function SearchScreen() {
   const hasActiveFilters = !!searchText || !!selectedSportId || skillLevel !== null;
 
   const renderRoomCard = ({ item }: { item: RoomWithDetails }) => {
-    const playDate = new Date(item.play_date);
-    const formattedDate = playDate.toLocaleDateString('ko-KR', {
-      month: 'short',
-      day: 'numeric',
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
     return (
       <TouchableOpacity
         style={styles.roomCard}
@@ -172,16 +165,13 @@ export default function SearchScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.roomHeader}>
-          <Text style={styles.roomSportIcon}>{item.sports?.icon}</Text>
-          <View style={styles.roomHeaderText}>
-            <Text style={styles.roomTitle} numberOfLines={1}>
-              {item.title}
+          <Text style={styles.roomTitle} numberOfLines={1}>
+            {formatRoomCardHeader(item)}
+          </Text>
+          <View style={styles.skillBadge}>
+            <Text style={styles.skillBadgeText}>
+              {formatSkillRange(item.min_skill_level, item.max_skill_level)}
             </Text>
-            <View style={styles.skillBadge}>
-              <Text style={styles.skillBadgeText}>
-                {formatSkillRange(item.min_skill_level, item.max_skill_level)}
-              </Text>
-            </View>
           </View>
         </View>
 
@@ -190,12 +180,6 @@ export default function SearchScreen() {
             <Feather name="map-pin" size={14} color={COLORS.textSecondary} />
             <Text style={styles.roomInfoText} numberOfLines={1}>
               {item.location_name}
-            </Text>
-          </View>
-          <View style={styles.roomInfoRow}>
-            <Feather name="clock" size={14} color={COLORS.textSecondary} />
-            <Text style={styles.roomInfoText}>
-              {formattedDate}
             </Text>
           </View>
           <View style={styles.roomInfoRow}>
@@ -224,7 +208,7 @@ export default function SearchScreen() {
         <Feather name="search" size={18} color={COLORS.textTertiary} />
         <TextInput
           style={styles.searchInput}
-          placeholder="방 제목으로 검색"
+          placeholder="장소, 설명으로 검색"
           placeholderTextColor={COLORS.textTertiary}
           value={searchText}
           onChangeText={setSearchText}
@@ -537,16 +521,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-    gap: 10,
-  },
-  roomSportIcon: {
-    fontSize: 24,
-  },
-  roomHeaderText: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 8,
   },
   roomTitle: {

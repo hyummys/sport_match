@@ -14,7 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
 import { Sport, RoomWithDetails } from '../../../lib/types';
-import { COLORS } from '../../../lib/constants';
+import { COLORS, formatSkillRange } from '../../../lib/constants';
+import { formatRoomCardHeader } from '../../../lib/format';
 import { useRooms } from '../../../hooks/useRooms';
 import { useUserSports } from '../../../hooks/useUserSports';
 import { useAuthStore } from '../../../stores/authStore';
@@ -104,28 +105,18 @@ export default function HomeScreen() {
       onPress={() => router.push(`/(tabs)/home/${item.sport_id}/${item.id}`)}
       activeOpacity={0.7}
     >
-      <View style={styles.roomHeader}>
-        <Text style={styles.roomSportIcon}>{item.sports?.icon}</Text>
-        <Text style={styles.roomTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-      </View>
+      <Text style={styles.roomCardHeader} numberOfLines={1}>
+        {formatRoomCardHeader(item)}
+      </Text>
       <View style={styles.roomInfo}>
         <View style={styles.roomInfoRow}>
           <Feather name="map-pin" size={14} color={COLORS.textSecondary} />
           <Text style={styles.roomInfoText}>{item.location_name}</Text>
-        </View>
-        <View style={styles.roomInfoRow}>
-          <Feather name="clock" size={14} color={COLORS.textSecondary} />
-          <Text style={styles.roomInfoText}>
-            {new Date(item.play_date).toLocaleDateString('ko-KR', {
-              month: 'short',
-              day: 'numeric',
-              weekday: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
+          <View style={styles.skillBadge}>
+            <Text style={styles.skillBadgeText}>
+              {formatSkillRange(item.min_skill_level, item.max_skill_level)}
+            </Text>
+          </View>
         </View>
         <View style={styles.roomInfoRow}>
           <Feather name="users" size={14} color={COLORS.textSecondary} />
@@ -313,20 +304,23 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  roomHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  roomSportIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  roomTitle: {
+  roomCardHeader: {
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.text,
-    flex: 1,
+    marginBottom: 10,
+  },
+  skillBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginLeft: 'auto',
+  },
+  skillBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.primaryDark,
   },
   roomInfo: {
     gap: 6,
