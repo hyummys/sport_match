@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../lib/supabase';
 import { Sport, RoomWithDetails } from '../../lib/types';
 import { COLORS, formatSkillRange } from '../../lib/constants';
@@ -31,10 +32,19 @@ export default function SearchScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const loadLastSport = async () => {
+      const savedSportId = await AsyncStorage.getItem('last_search_sport_id');
+      if (savedSportId) {
+        setSelectedSportId(savedSportId);
+        setShowOnboarding(false);
+      }
+    };
+    loadLastSport();
     loadSports();
     searchRooms();
   }, []);
@@ -108,7 +118,16 @@ export default function SearchScreen() {
   }, [selectedSportId, skillLevel, searchText]);
 
   const handleSportFilter = (sportId: string) => {
-    setSelectedSportId((prev) => (prev === sportId ? null : sportId));
+    setSelectedSportId((prev) => {
+      const newValue = prev === sportId ? null : sportId;
+      if (newValue) {
+        AsyncStorage.setItem('last_search_sport_id', newValue);
+        setShowOnboarding(false);
+      } else {
+        AsyncStorage.removeItem('last_search_sport_id');
+      }
+      return newValue;
+    });
   };
 
   const handleSkillFilter = (level: number) => {
@@ -205,6 +224,16 @@ export default function SearchScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Onboarding Banner */}
+      {showOnboarding && (
+        <View style={styles.onboardingBanner}>
+          <Text style={styles.onboardingTitle}>어떤 종목을 볼까요?</Text>
+          <Text style={styles.onboardingSubtitle}>
+            관심 있는 종목을 선택하면 해당 종목의 방만 볼 수 있어요
+          </Text>
+        </View>
+      )}
 
       {/* Sport Filter Chips */}
       <View style={styles.filterSection}>
@@ -359,6 +388,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  onboardingBanner: {
+    backgroundColor: '#EFF6FF',
+    marginHorizontal: 20,
+    marginTop: 12,
+    borderRadius: 12,
+    padding: 16,
+  },
+  onboardingTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  onboardingSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
   },
   searchBarContainer: {
     flexDirection: 'row',

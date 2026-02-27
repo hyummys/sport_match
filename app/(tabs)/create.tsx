@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../lib/supabase';
 import { Sport, CreateRoomInput, FavoritePlace } from '../../lib/types';
 import {
@@ -96,6 +97,9 @@ export default function CreateRoomScreen() {
 
   useEffect(() => {
     loadSports();
+    AsyncStorage.getItem('last_create_sport_id').then((id) => {
+      if (id) setSportId(id);
+    });
   }, []);
 
   const selectedSport = sports.find((s) => s.id === sportId);
@@ -130,6 +134,21 @@ export default function CreateRoomScreen() {
     const combined = new Date(selectedDate);
     combined.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
     return combined.toISOString();
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setLocationName('');
+    setLocationAddress('');
+    setLatitude(null);
+    setLongitude(null);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setMaxParticipants(4);
+    setCostPerPerson('');
+    setMinSkillLevel(0);
+    setMaxSkillLevel(10);
   };
 
   const validate = (): boolean => {
@@ -199,6 +218,7 @@ export default function CreateRoomScreen() {
       return;
     }
 
+    resetForm();
     Alert.alert('성공', '방이 생성되었습니다!', [
       { text: '확인', onPress: () => router.replace('/(tabs)/home') },
     ]);
@@ -333,7 +353,10 @@ export default function CreateRoomScreen() {
             <TouchableOpacity
               key={sport.id}
               style={[styles.chip, selected && styles.chipSelected]}
-              onPress={() => setSportId(sport.id)}
+              onPress={() => {
+                setSportId(sport.id);
+                AsyncStorage.setItem('last_create_sport_id', sport.id);
+              }}
               activeOpacity={0.7}
             >
               <Text style={styles.chipEmoji}>{sport.icon}</Text>

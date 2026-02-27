@@ -127,6 +127,15 @@ export function useRooms() {
     return { data, error };
   };
 
+  // 방 삭제
+  const deleteRoom = async (roomId: string) => {
+    const { error } = await supabase
+      .from('rooms')
+      .delete()
+      .eq('id', roomId);
+    return { error };
+  };
+
   // 참가 취소
   const leaveRoom = async (roomId: string, userId: string) => {
     const { error } = await supabase
@@ -179,6 +188,7 @@ export function useRooms() {
     updateRoomStatus,
     joinRoom,
     leaveRoom,
+    deleteRoom,
     getMyRooms,
   };
 }

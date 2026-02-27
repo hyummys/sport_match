@@ -12,18 +12,24 @@ import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../hooks/useAuth';
 import { useProfile } from '../../../hooks/useProfile';
+import { useUserSports, UserSportWithDetails } from '../../../hooks/useUserSports';
 import { COLORS } from '../../../lib/constants';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { getUserStats } = useProfile();
+  const { getUserSports } = useUserSports();
 
   const [stats, setStats] = useState({ hostedCount: 0, participatedCount: 0 });
+  const [userSports, setUserSports] = useState<UserSportWithDetails[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       if (user?.id) {
         getUserStats(user.id).then(setStats);
+        getUserSports(user.id).then(({ data }) => {
+          if (data) setUserSports(data);
+        });
       }
     }, [user?.id])
   );
@@ -89,6 +95,24 @@ export default function ProfileScreen() {
             </Text>
             <Text style={styles.statLabel}>매너점수</Text>
           </View>
+        </View>
+
+        {/* 관심 종목 */}
+        <View style={styles.sportsSection}>
+          <Text style={styles.sportsSectionTitle}>관심 종목</Text>
+          {userSports.length > 0 ? (
+            <View style={styles.sportsList}>
+              {userSports.map((us) => (
+                <View key={us.id} style={styles.sportItem}>
+                  <Text style={styles.sportIcon}>{us.sports.icon}</Text>
+                  <Text style={styles.sportName}>{us.sports.name}</Text>
+                  <Text style={styles.sportLevel}>Lv.{us.skill_level}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.sportsEmpty}>관심 종목을 설정해보세요</Text>
+          )}
         </View>
 
         {/* 메뉴 */}
@@ -188,6 +212,45 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: COLORS.border,
     marginVertical: 4,
+  },
+  // Sports
+  sportsSection: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+  },
+  sportsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  sportsList: {
+    gap: 10,
+  },
+  sportItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sportIcon: {
+    fontSize: 20,
+  },
+  sportName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+    flex: 1,
+  },
+  sportLevel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  sportsEmpty: {
+    fontSize: 14,
+    color: COLORS.textTertiary,
   },
   // Menu
   menuSection: {

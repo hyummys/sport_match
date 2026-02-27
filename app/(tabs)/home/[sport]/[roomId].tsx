@@ -16,6 +16,7 @@ import { RoomDetailWithParticipants, RoomStatus } from '../../../../lib/types';
 import { useRooms } from '../../../../hooks/useRooms';
 import { useRoomRealtime } from '../../../../hooks/useRealtime';
 import { useAuthStore } from '../../../../stores/authStore';
+import { supabase } from '../../../../lib/supabase';
 
 export default function RoomDetailScreen() {
   const { sport: sportId, roomId } = useLocalSearchParams<{
@@ -38,6 +39,8 @@ export default function RoomDetailScreen() {
     } else {
       setRoom(data);
       setError(null);
+      // Fire-and-forget view count increment
+      supabase.rpc('increment_view_count', { room_id: roomId });
     }
   }, [roomId]);
 

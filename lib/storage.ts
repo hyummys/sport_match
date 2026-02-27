@@ -46,7 +46,10 @@ export async function uploadAvatar(
       });
 
     if (uploadError) {
-      return { url: null, error: uploadError.message };
+      const message = uploadError.message.toLowerCase().includes('bucket')
+        ? '아바타 저장소를 찾을 수 없습니다. 관리자에게 문의하세요.'
+        : uploadError.message;
+      return { url: null, error: message };
     }
 
     const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);

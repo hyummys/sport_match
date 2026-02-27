@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,18 +19,73 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../../../hooks/useAuth';
 import { useProfile } from '../../../hooks/useProfile';
+import { useUserSports } from '../../../hooks/useUserSports';
 import { COLORS } from '../../../lib/constants';
 import { REGIONS } from '../../../lib/regions';
+import { supabase } from '../../../lib/supabase';
+import { Sport } from '../../../lib/types';
 
 export default function EditProfileScreen() {
   const { user } = useAuth();
   const { isLoading, updateProfile, changeAvatar } = useProfile();
+  const { getUserSports, saveUserSports } = useUserSports();
 
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [region, setRegion] = useState(user?.region || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || null);
   const [isUploading, setIsUploading] = useState(false);
   const [showRegionModal, setShowRegionModal] = useState(false);
+
+  // Sports selection state
+  const [sports, setSports] = useState<Sport[]>([]);
+  const [isSportsLoading, setIsSportsLoading] = useState(true);
+  const [selectedSports, setSelectedSports] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      // Load all sports
+      setIsSportsLoading(true);
+      const { data: sportsData } = await supabase
+        .from('sports')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      if (sportsData) setSports(sportsData);
+      setIsSportsLoading(false);
+
+      // Load user's existing sports
+      const { data: userSportsData } = await getUserSports(user.id);
+      if (userSportsData) {
+        const map: Record<string, number> = {};
+        userSportsData.forEach((us) => {
+          map[us.sport_id] = us.skill_level;
+        });
+        setSelectedSports(map);
+      }
+    };
+    load();
+  }, [user?.id]);
+
+  const toggleSport = (sportId: string) => {
+    setSelectedSports((prev) => {
+      const next = { ...prev };
+      if (next[sportId] !== undefined) {
+        delete next[sportId];
+      } else {
+        next[sportId] = 5;
+      }
+      return next;
+    });
+  };
+
+  const updateSkillLevel = (sportId: string, delta: number) => {
+    setSelectedSports((prev) => {
+      const current = prev[sportId] ?? 5;
+      const next = Math.max(0, Math.min(10, current + delta));
+      return { ...prev, [sportId]: next };
+    });
+  };
 
   if (!user) return null;
 
@@ -62,11 +117,19 @@ export default function EditProfileScreen() {
 
     if (error) {
       Alert.alert('오류', '프로필 수정에 실패했습니다.');
-    } else {
-      Alert.alert('완료', '프로필이 수정되었습니다.', [
-        { text: '확인', onPress: () => router.back() },
-      ]);
+      return;
     }
+
+    // Save sports selections
+    const selections = Object.entries(selectedSports).map(([sport_id, skill_level]) => ({
+      sport_id,
+      skill_level,
+    }));
+    await saveUserSports(user.id, selections);
+
+    Alert.alert('완료', '프로필이 수정되었습니다.', [
+      { text: '확인', onPress: () => router.back() },
+    ]);
   };
 
   return (
@@ -142,6 +205,63 @@ export default function EditProfileScreen() {
                 color={COLORS.textTertiary}
               />
             </TouchableOpacity>
+          </View>
+
+          {/* 관심 종목 */}
+          <View style={styles.field}>
+            <Text style={styles.label}>관심 종목</Text>
+            {isSportsLoading ? (
+              <ActivityIndicator size="small" color={COLORS.primary} style={{ paddingVertical: 12 }} />
+            ) : (
+              <View style={styles.chipContainer}>
+                {sports.map((sport) => {
+                  const isSelected = selectedSports[sport.id] !== undefined;
+                  return (
+                    <TouchableOpacity
+                      key={sport.id}
+                      style={[styles.sportChip, isSelected && styles.sportChipSelected]}
+                      onPress={() => toggleSport(sport.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.sportChipEmoji}>{sport.icon}</Text>
+                      <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
+                        {sport.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* Skill level steppers for selected sports */}
+            {Object.entries(selectedSports).map(([sportId, level]) => {
+              const sport = sports.find((s) => s.id === sportId);
+              if (!sport) return null;
+              return (
+                <View key={sportId} style={styles.skillRow}>
+                  <Text style={styles.skillSportName}>{sport.icon} {sport.name}</Text>
+                  <View style={styles.stepperControl}>
+                    <TouchableOpacity
+                      style={[styles.stepperBtn, level <= 0 && styles.stepperBtnDisabled]}
+                      onPress={() => updateSkillLevel(sportId, -1)}
+                      activeOpacity={0.6}
+                    >
+                      <Feather name="minus" size={16} color={level <= 0 ? COLORS.textTertiary : COLORS.primary} />
+                    </TouchableOpacity>
+                    <View style={styles.stepperValueBox}>
+                      <Text style={styles.stepperValue}>{level}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.stepperBtn, level >= 10 && styles.stepperBtnDisabled]}
+                      onPress={() => updateSkillLevel(sportId, 1)}
+                      activeOpacity={0.6}
+                    >
+                      <Feather name="plus" size={16} color={level >= 10 ? COLORS.textTertiary : COLORS.primary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
           </View>
 
           {/* 저장 버튼 */}
@@ -313,4 +433,81 @@ const styles = StyleSheet.create({
   regionItemSelected: { backgroundColor: '#EFF6FF' },
   regionItemText: { fontSize: 16, color: COLORS.text },
   regionItemTextSelected: { color: COLORS.primary, fontWeight: '600' },
+  // Sport chips
+  chipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  sportChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    gap: 6,
+  },
+  sportChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  sportChipEmoji: {
+    fontSize: 18,
+  },
+  sportChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  sportChipTextSelected: {
+    color: '#FFFFFF',
+  },
+  // Skill stepper
+  skillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 8,
+  },
+  skillSportName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  stepperControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  stepperBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.background,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepperBtnDisabled: {
+    borderColor: COLORS.border,
+  },
+  stepperValueBox: {
+    width: 36,
+    alignItems: 'center',
+  },
+  stepperValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.text,
+  },
 });

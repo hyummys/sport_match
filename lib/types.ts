@@ -63,6 +63,7 @@ export interface Room {
   cost_per_person: number;
   min_skill_level: SkillLevel;
   max_skill_level: SkillLevel;
+  view_count: number;
   status: RoomStatus;
   created_at: string;
   updated_at: string;
@@ -165,9 +166,10 @@ export interface Database {
       };
       rooms: {
         Row: Room;
-        Insert: Omit<Room, 'id' | 'created_at' | 'updated_at' | 'current_participants' | 'status'> & {
+        Insert: Omit<Room, 'id' | 'created_at' | 'updated_at' | 'current_participants' | 'status' | 'view_count'> & {
           status?: RoomStatus;
           current_participants?: number;
+          view_count?: number;
         };
         Update: Partial<Omit<Room, 'id' | 'created_at' | 'host_id'>>;
         Relationships: [];

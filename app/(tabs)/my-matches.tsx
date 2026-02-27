@@ -21,7 +21,7 @@ type Tab = 'hosted' | 'participating';
 
 export default function MyMatchesScreen() {
   const router = useRouter();
-  const { getMyRooms, updateRoomStatus } = useRooms();
+  const { getMyRooms, updateRoomStatus, deleteRoom } = useRooms();
   const user = useAuthStore((s) => s.user);
 
   const [activeTab, setActiveTab] = useState<Tab>('hosted');
@@ -72,6 +72,24 @@ export default function MyMatchesScreen() {
         },
       ],
     );
+  };
+
+  const handleDeleteRoom = (roomId: string) => {
+    Alert.alert('방 삭제', '이 방을 완전히 삭제하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          const { error } = await deleteRoom(roomId);
+          if (error) {
+            Alert.alert('오류', '삭제에 실패했습니다.');
+          } else {
+            await loadData();
+          }
+        },
+      },
+    ]);
   };
 
   const handleRoomPress = (room: RoomWithDetails) => {
@@ -157,6 +175,18 @@ export default function MyMatchesScreen() {
             >
               <Feather name="x-circle" size={14} color={COLORS.error} />
               <Text style={[styles.actionBtnText, { color: COLORS.error }]}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {isHost && item.status === 'cancelled' && (
+          <View style={styles.hostActions}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.deleteBtn]}
+              onPress={() => handleDeleteRoom(item.id)}
+            >
+              <Feather name="trash-2" size={14} color={COLORS.error} />
+              <Text style={[styles.actionBtnText, { color: COLORS.error }]}>삭제</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -390,6 +420,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.warning + '0A',
   },
   cancelBtn: {
+    borderColor: COLORS.error + '40',
+    backgroundColor: COLORS.error + '0A',
+  },
+  deleteBtn: {
     borderColor: COLORS.error + '40',
     backgroundColor: COLORS.error + '0A',
   },

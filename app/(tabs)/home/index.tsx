@@ -16,12 +16,17 @@ import { supabase } from '../../../lib/supabase';
 import { Sport, RoomWithDetails } from '../../../lib/types';
 import { COLORS } from '../../../lib/constants';
 import { useRooms } from '../../../hooks/useRooms';
+import { useUserSports } from '../../../hooks/useUserSports';
+import { useAuthStore } from '../../../stores/authStore';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { getRecruitingRooms } = useRooms();
+  const { getUserSportIds } = useUserSports();
+  const user = useAuthStore((s) => s.user);
   const [sports, setSports] = useState<Sport[]>([]);
   const [recentRooms, setRecentRooms] = useState<RoomWithDetails[]>([]);
+  const [hasInterests, setHasInterests] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -44,10 +49,33 @@ export default function HomeScreen() {
 
     if (sportsData) setSports(sportsData);
 
-    // 최근 모집 중인 방
-    const { data: roomsData } = await getRecruitingRooms(5);
-    if (roomsData) setRecentRooms(roomsData);
+    // 관심 종목 기반 방 조회
+    const sportIds = user ? await getUserSportIds(user.id) : [];
+    setHasInterests(sportIds.length > 0);
 
+    let query = supabase
+      .from('rooms')
+      .select('*, sports(*), users!host_id(*)')
+      .eq('status', 'recruiting')
+      .gte('play_date', new Date().toISOString())
+      .order('view_count', { ascending: false })
+      .limit(5);
+
+    if (sportIds.length > 0) {
+      query = query.in('sport_id', sportIds);
+    }
+
+    const { data: roomsData } = await query;
+    let filtered = (roomsData as RoomWithDetails[]) || [];
+
+    // 지역 필터 (클라이언트 사이드)
+    if (sportIds.length > 0 && user?.region) {
+      filtered = filtered.filter(
+        (room) => room.location_address?.includes(user.region!) ?? true
+      );
+    }
+
+    setRecentRooms(filtered);
     setIsLoading(false);
   };
 
@@ -159,7 +187,9 @@ export default function HomeScreen() {
 
             {/* 모집 중인 방 섹션 */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🔥 지금 모집 중</Text>
+              <Text style={styles.sectionTitle}>
+                {hasInterests ? '내 관심 매칭' : '추천 매칭'}
+              </Text>
             </View>
           </>
         }
