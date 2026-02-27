@@ -28,6 +28,7 @@ import {
 import { useRooms } from '../../hooks/useRooms';
 import { useFavoritePlaces } from '../../hooks/useFavoritePlaces';
 import { useAuthStore } from '../../stores/authStore';
+import { useUserSports } from '../../hooks/useUserSports';
 import { searchPlaces, getPlaceKeyword, KakaoPlace } from '../../lib/kakao';
 import { WebView } from 'react-native-webview';
 import WheelPicker from '../../components/WheelPicker';
@@ -59,6 +60,7 @@ export default function CreateRoomScreen() {
   const { user } = useAuthStore();
   const { createRoom, isLoading: isSubmitting } = useRooms();
   const { getFavorites, addFavorite, removeFavorite } = useFavoritePlaces();
+  const { getUserSports } = useUserSports();
 
   const [sports, setSports] = useState<Sport[]>([]);
   const [isSportsLoading, setIsSportsLoading] = useState(true);
@@ -107,6 +109,16 @@ export default function CreateRoomScreen() {
 
   const loadSports = async () => {
     setIsSportsLoading(true);
+    // 관심 종목 우선 로드
+    if (user) {
+      const { data: userSportsData } = await getUserSports(user.id);
+      if (userSportsData && userSportsData.length > 0) {
+        setSports(userSportsData.map((us) => us.sports));
+        setIsSportsLoading(false);
+        return;
+      }
+    }
+    // 관심 종목 미등록 또는 비로그인 → 전체 종목 fallback
     const { data } = await supabase
       .from('sports')
       .select('*')

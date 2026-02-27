@@ -22,7 +22,7 @@ import { useAuthStore } from '../../../stores/authStore';
 export default function HomeScreen() {
   const router = useRouter();
   const { getRecruitingRooms } = useRooms();
-  const { getUserSportIds } = useUserSports();
+  const { getUserSports } = useUserSports();
   const user = useAuthStore((s) => s.user);
   const [sports, setSports] = useState<Sport[]>([]);
   const [recentRooms, setRecentRooms] = useState<RoomWithDetails[]>([]);
@@ -40,17 +40,26 @@ export default function HomeScreen() {
   const loadData = async () => {
     setIsLoading(true);
 
-    // 종목 목록
-    const { data: sportsData } = await supabase
-      .from('sports')
-      .select('*')
-      .eq('is_active', true)
-      .order('name');
+    // 관심 종목 조회 (종목 상세 포함)
+    let sportIds: string[] = [];
+    if (user) {
+      const { data: userSportsData } = await getUserSports(user.id);
+      if (userSportsData && userSportsData.length > 0) {
+        setSports(userSportsData.map((us) => us.sports));
+        sportIds = userSportsData.map((us) => us.sport_id);
+      }
+    }
 
-    if (sportsData) setSports(sportsData);
+    // 관심 종목 미등록 또는 비로그인 → 전체 종목 fallback
+    if (sportIds.length === 0) {
+      const { data: sportsData } = await supabase
+        .from('sports')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      if (sportsData) setSports(sportsData);
+    }
 
-    // 관심 종목 기반 방 조회
-    const sportIds = user ? await getUserSportIds(user.id) : [];
     setHasInterests(sportIds.length > 0);
 
     let query = supabase

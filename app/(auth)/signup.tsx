@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useUserSports } from '../../hooks/useUserSports';
-import { COLORS } from '../../lib/constants';
+import { COLORS, getLevelDescription } from '../../lib/constants';
 import { supabase } from '../../lib/supabase';
 import { Sport } from '../../lib/types';
 
@@ -248,6 +248,9 @@ export default function SignupScreen() {
                       <Feather name="plus" size={16} color={level >= 10 ? COLORS.textTertiary : COLORS.primary} />
                     </TouchableOpacity>
                   </View>
+                  <Text style={styles.levelDescription}>
+                    {getLevelDescription(sport.name, level)}
+                  </Text>
                 </View>
               );
             })}
@@ -387,6 +390,7 @@ const styles = StyleSheet.create({
   // Skill stepper
   skillRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: COLORS.surface,
@@ -396,6 +400,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginTop: 8,
+  },
+  levelDescription: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    width: '100%',
+    marginTop: 6,
   },
   skillSportName: {
     fontSize: 14,
